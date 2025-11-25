@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
     LineChart,
     Line,
@@ -20,6 +20,9 @@ const ConversionChart: React.FC = () => {
         new Set(data.variations.map((v) => v.name))
     );
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+    const [zoomLevel, setZoomLevel] = useState<number>(100);
+    const [isVariationDropdownOpen, setIsVariationDropdownOpen] = useState(false);
+    const variationDropdownRef = useRef<HTMLDivElement>(null);
 
     const chartData = useMemo(() => {
         const dailyData = data.data.map((day) => {
@@ -134,7 +137,7 @@ const ConversionChart: React.FC = () => {
         });
     }, [chartData, visibleVariations]);
 
-    const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
+    const colors = ['#2D2D2D', '#6B7AFF', '#FF8A65', '#FFD54F'];
 
     const handleVariationToggle = (variationName: string) => {
         setVisibleVariations((prev) => {
@@ -155,6 +158,52 @@ const ConversionChart: React.FC = () => {
         handleVariationToggle(e.value);
     };
 
+    // Zoom controls
+    const handleZoomIn = () => {
+        setZoomLevel(prev => Math.min(prev + 25, 200));
+    };
+
+    const handleZoomOut = () => {
+        setZoomLevel(prev => Math.max(prev - 25, 50));
+    };
+
+    const handleZoomReset = () => {
+        setZoomLevel(100);
+    };
+
+    // Apply zoom to data
+    const zoomedData = useMemo(() => {
+        if (zoomLevel === 100) return filteredData;
+        const totalPoints = filteredData.length;
+        const visiblePoints = Math.max(Math.floor(totalPoints * (100 / zoomLevel)), 2);
+        const startIndex = Math.max(0, totalPoints - visiblePoints);
+        return filteredData.slice(startIndex);
+    }, [filteredData, zoomLevel]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (variationDropdownRef.current && !variationDropdownRef.current.contains(event.target as Node)) {
+                setIsVariationDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Get display text for variations dropdown
+    const getVariationDisplayText = () => {
+        if (visibleVariations.size === data.variations.length) {
+            return 'All variations selected';
+        }
+        const selectedNames = Array.from(visibleVariations);
+        if (selectedNames.length === 1) {
+            return selectedNames[0];
+        }
+        return `${selectedNames.length} variations selected`;
+    };
+
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
@@ -169,11 +218,12 @@ const ConversionChart: React.FC = () => {
                         if (!details) return null;
 
                         return (
-                            <div key={index} className={styles.tooltipItem} style={{ color: entry.color }}>
-                                <div className={styles.tooltipLabel}>{variationName}</div>
-                                <div>Rate: {details.rate}%</div>
-                                <div>Visits: {details.visits}</div>
-                                <div>Conversions: {details.conversions}</div>
+                            <div key={index} className={styles.tooltipItem}>
+                                <div className={styles.tooltipRow}>
+                                    <span className={styles.tooltipBullet} style={{ backgroundColor: entry.color }}></span>
+                                    <span className={styles.tooltipLabel}>{variationName}</span>
+                                    <span className={styles.tooltipValue}>{details.rate}%</span>
+                                </div>
                             </div>
                         );
                     })}
@@ -185,43 +235,62 @@ const ConversionChart: React.FC = () => {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Conversion Rate by Variation</h2>
 
-            <div className={styles.controlsContainer}>
-                <div className={styles.controlGroup}>
-                    <span className={styles.label}>View:</span>
-                    <select
-                        className={styles.select}
-                        value={viewMode}
-                        onChange={(e) => setViewMode(e.target.value as 'day' | 'week')}
+            <div className={styles.controlsContainer}>    <div className={styles.controlGroup} ref={variationDropdownRef}>
+                <div className={styles.customSelect}>
+                    <button
+                        className={styles.selectButton}
+                        onClick={() => setIsVariationDropdownOpen(!isVariationDropdownOpen)}
                     >
-                        <option value="day">Daily</option>
-                        <option value="week">Weekly</option>
-                    </select>
+                        {getVariationDisplayText()}
+                        <span className={styles.selectArrow}>▼</span>
+                    </button>
+                    {isVariationDropdownOpen && (
+                        <div className={styles.dropdownMenu}>
+                            {data.variations.map((variation, index) => (
+                                <label key={variation.name} className={styles.dropdownItem}>
+                                    <input
+                                        type="checkbox"
+                                        checked={visibleVariations.has(variation.name)}
+                                        onChange={() => handleVariationToggle(variation.name)}
+                                        disabled={visibleVariations.has(variation.name) && visibleVariations.size === 1}
+                                    />
+                                    <span style={{ color: colors[index % colors.length] }}>{variation.name}</span>
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+                <div className={styles.leftControls}>
+                    <div className={styles.controlGroup}>
+                        <span className={styles.label}>View:</span>
+                        <select
+                            className={styles.select}
+                            value={viewMode}
+                            onChange={(e) => setViewMode(e.target.value as 'day' | 'week')}
+                        >
+                            <option value="day">Day</option>
+                            <option value="week">Week</option>
+                        </select>
+                    </div>
+
+
                 </div>
 
-                <div className={styles.controlGroup}>
-                    <span className={styles.label}>Variations:</span>
-                    <div className={styles.checkboxGroup}>
-                        {data.variations.map((variation, index) => (
-                            <label key={variation.name} className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    checked={visibleVariations.has(variation.name)}
-                                    onChange={() => handleVariationToggle(variation.name)}
-                                    disabled={visibleVariations.has(variation.name) && visibleVariations.size === 1}
-                                />
-                                <span style={{ color: colors[index % colors.length] }}>{variation.name}</span>
-                            </label>
-                        ))}
-                    </div>
+                <div className={styles.zoomControls}>
+                    <span className={styles.label}>Line style:</span>
+                    <span className={styles.lineStyleIndicator}>line</span>
+                    <button className={styles.zoomButton} onClick={handleZoomOut} title="Zoom out">−</button>
+                    <button className={styles.zoomButton} onClick={handleZoomIn} title="Zoom in">+</button>
+                    <button className={styles.zoomButton} onClick={handleZoomReset} title="Reset zoom">⟲</button>
                 </div>
             </div>
 
             <div className={styles.chartWrapper}>
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart
-                        data={filteredData}
+                        data={zoomedData}
                         margin={{
                             top: 5,
                             right: 30,
