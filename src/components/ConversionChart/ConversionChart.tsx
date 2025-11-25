@@ -236,35 +236,36 @@ const ConversionChart: React.FC = () => {
     return (
         <div className={styles.container}>
 
-            <div className={styles.controlsContainer}>    <div className={styles.controlGroup} ref={variationDropdownRef}>
-                <div className={styles.customSelect}>
-                    <button
-                        className={styles.selectButton}
-                        onClick={() => setIsVariationDropdownOpen(!isVariationDropdownOpen)}
-                    >
-                        {getVariationDisplayText()}
-                        <span className={styles.selectArrow}>▼</span>
-                    </button>
-                    {isVariationDropdownOpen && (
-                        <div className={styles.dropdownMenu}>
-                            {data.variations.map((variation, index) => (
-                                <label key={variation.name} className={styles.dropdownItem}>
-                                    <input
-                                        type="checkbox"
-                                        checked={visibleVariations.has(variation.name)}
-                                        onChange={() => handleVariationToggle(variation.name)}
-                                        disabled={visibleVariations.has(variation.name) && visibleVariations.size === 1}
-                                    />
-                                    <span style={{ color: colors[index % colors.length] }}>{variation.name}</span>
-                                </label>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
+            <div className={styles.controlsContainer}>
                 <div className={styles.leftControls}>
+                    <div className={styles.controlGroup} ref={variationDropdownRef}>
+                        <div className={styles.customSelect}>
+                            <button
+                                className={styles.selectButton}
+                                onClick={() => setIsVariationDropdownOpen(!isVariationDropdownOpen)}
+                            >
+                                {getVariationDisplayText()}
+                                <span className={styles.selectArrow}>▼</span>
+                            </button>
+                            {isVariationDropdownOpen && (
+                                <div className={styles.dropdownMenu}>
+                                    {data.variations.map((variation, index) => (
+                                        <label key={variation.name} className={styles.dropdownItem}>
+                                            <input
+                                                type="checkbox"
+                                                checked={visibleVariations.has(variation.name)}
+                                                onChange={() => handleVariationToggle(variation.name)}
+                                                disabled={visibleVariations.has(variation.name) && visibleVariations.size === 1}
+                                            />
+                                            <span style={{ color: colors[index % colors.length] }}>{variation.name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     <div className={styles.controlGroup}>
-                        <span className={styles.label}>View:</span>
                         <select
                             className={styles.select}
                             value={viewMode}
@@ -274,8 +275,6 @@ const ConversionChart: React.FC = () => {
                             <option value="week">Week</option>
                         </select>
                     </div>
-
-
                 </div>
 
                 <div className={styles.zoomControls}>
