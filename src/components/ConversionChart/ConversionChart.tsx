@@ -22,7 +22,25 @@ const ConversionChart: React.FC = () => {
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
     const [zoomLevel, setZoomLevel] = useState<number>(100);
     const [isVariationDropdownOpen, setIsVariationDropdownOpen] = useState(false);
+    const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const variationDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Load saved theme from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('chart-theme') as 'light' | 'dark' | null;
+        if (saved) {
+            setTheme(saved);
+        }
+    }, []);
+
+    // Persist theme changes
+    useEffect(() => {
+        localStorage.setItem('chart-theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    };
 
     const chartData = useMemo(() => {
         const dailyData = data.data.map((day) => {
@@ -234,7 +252,7 @@ const ConversionChart: React.FC = () => {
     };
 
     return (
-        <div className={styles.container}>
+        <div className={styles.container} data-theme={theme}>
 
             <div className={styles.controlsContainer}>
                 <div className={styles.leftControls}>
@@ -278,6 +296,13 @@ const ConversionChart: React.FC = () => {
                 </div>
 
                 <div className={styles.zoomControls}>
+                    <button
+                        className={styles.themeToggle}
+                        onClick={toggleTheme}
+                        title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+                    >
+                        {theme === 'light' ? '🌙' : '☀️'}
+                    </button>
                     <span className={styles.label}>Line style:</span>
                     <span className={styles.lineStyleIndicator}>line</span>
                     <button className={styles.zoomButton} onClick={handleZoomOut} title="Zoom out">−</button>
@@ -297,9 +322,16 @@ const ConversionChart: React.FC = () => {
                             bottom: 5,
                         }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis unit="%" tickFormatter={(value) => `${value}%`} />
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke={theme === 'dark' ? '#1a1f3a' : '#f0f0f0'}
+                        />
+                        <XAxis
+                            dataKey="date"
+                            stroke={theme === 'dark' ? '#a0a0a0' : '#666'}
+                        />
+                        <YAxis unit="%" tickFormatter={(value) => `${value}`}
+                            stroke={theme === 'dark' ? '#a0a0a0' : '#666'} />
                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5' }} />
                         <Legend onClick={handleLegendClick} />
                         {data.variations.map((variation, index) => (
