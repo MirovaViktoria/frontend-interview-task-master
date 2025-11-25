@@ -226,7 +226,10 @@ const ConversionChart: React.FC = () => {
         if (active && payload && payload.length) {
             return (
                 <div className={styles.tooltip}>
-                    <p className={styles.tooltipDate}>{label}</p>
+                    <div className={styles.dateContainer}>
+                        <img src="calendar.svg" alt="Calendar" />
+                        <p className={styles.tooltipDate}>{label}</p>
+                    </div>
                     {payload.map((entry: any, index: number) => {
                         const variationName = entry.name;
                         // Only show tooltip for visible variations
@@ -291,6 +294,8 @@ const ConversionChart: React.FC = () => {
                         >
                             <option value="day">Day</option>
                             <option value="week">Week</option>
+                            <option value="month">Month</option>
+                            <option value="year">Year</option>
                         </select>
                     </div>
                 </div>

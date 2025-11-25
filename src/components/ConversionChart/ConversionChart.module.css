@@ -45,20 +45,31 @@
 .tooltip {
   background-color: var(--tooltip-bg);
   border: 1px solid var(--tooltip-border);
-  padding: 12px 16px;
+  padding: 12px 14px;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   font-size: 13px;
   min-width: 180px;
 }
 
+.dateContainer {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px
+}
+
+.dateContainer img {
+  margin-right: 8px;
+}
+
 .tooltipDate {
   font-weight: 600;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-color);
   color: var(--tooltip-text);
+  margin: 0;
+  padding: 0;
   font-size: 12px;
+  text-align: left;
 }
 
 .tooltipItem {
