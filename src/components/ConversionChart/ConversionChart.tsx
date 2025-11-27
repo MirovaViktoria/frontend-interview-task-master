@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
-    LineChart,
+    ComposedChart,
     Line,
+    Area,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -22,6 +23,7 @@ const ConversionChart: React.FC = () => {
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
     const [zoomLevel, setZoomLevel] = useState<number>(100);
     const [isVariationDropdownOpen, setIsVariationDropdownOpen] = useState(false);
+    const [lineStyle, setLineStyle] = useState<'line' | 'smooth' | 'area'>('line');
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const variationDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -155,7 +157,7 @@ const ConversionChart: React.FC = () => {
         });
     }, [chartData, visibleVariations]);
 
-    const colors = ['#2D2D2D', '#6B7AFF', '#FF8A65', '#FFD54F'];
+    const colors = ['#5E5D67', '#FF8346', '#ff1a1a', '#3838E7'];
 
     const handleVariationToggle = (variationName: string) => {
         setVisibleVariations((prev) => {
@@ -309,7 +311,15 @@ const ConversionChart: React.FC = () => {
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
                     <span className={styles.label}>Line style:</span>
-                    <span className={styles.lineStyleIndicator}>line</span>
+                    <select
+                        className={styles.select}
+                        value={lineStyle}
+                        onChange={(e) => setLineStyle(e.target.value as 'line' | 'smooth' | 'area')}
+                    >
+                        <option value="line">Line</option>
+                        <option value="smooth">Smooth</option>
+                        <option value="area">Area</option>
+                    </select>
                     <button className={styles.zoomButton} onClick={handleZoomOut} title="Zoom out">−</button>
                     <button className={styles.zoomButton} onClick={handleZoomIn} title="Zoom in">+</button>
                     <button className={styles.zoomButton} onClick={handleZoomReset} title="Reset zoom">⟲</button>
@@ -318,7 +328,7 @@ const ConversionChart: React.FC = () => {
 
             <div className={styles.chartWrapper}>
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
+                    <ComposedChart
                         data={zoomedData}
                         margin={{
                             top: 5,
@@ -327,6 +337,17 @@ const ConversionChart: React.FC = () => {
                             bottom: 5,
                         }}
                     >
+                        <defs>
+                            {data.variations.map((variation, index) => {
+                                const gradientId = `gradient-${variation.name.replace(/\s+/g, '-')}`;
+                                return (
+                                    <linearGradient key={gradientId} id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={colors[index % colors.length]} stopOpacity={0.5} />
+                                        <stop offset="95%" stopColor={colors[index % colors.length]} stopOpacity={0} />
+                                    </linearGradient>
+                                );
+                            })}
+                        </defs>
                         <CartesianGrid
                             strokeDasharray="3 3"
                             stroke={theme === 'dark' ? '#1a1f3a' : '#f0f0f0'}
@@ -339,18 +360,40 @@ const ConversionChart: React.FC = () => {
                             stroke={theme === 'dark' ? '#a0a0a0' : '#666'} />
                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '5 5' }} />
                         <Legend onClick={handleLegendClick} />
-                        {data.variations.map((variation, index) => (
-                            <Line
-                                key={variation.name}
-                                type="monotone"
-                                dataKey={variation.name}
-                                stroke={colors[index % colors.length]}
-                                activeDot={{ r: 8 }}
-                                hide={!visibleVariations.has(variation.name)}
-                                connectNulls={true}
-                            />
-                        ))}
-                    </LineChart>
+                        {data.variations.map((variation, index) => {
+                            if (!visibleVariations.has(variation.name)) return null;
+
+                            const color = colors[index % colors.length];
+                            const commonProps = {
+                                key: variation.name,
+                                dataKey: variation.name,
+                                stroke: color,
+                                activeDot: { r: 8 },
+                                connectNulls: true,
+                            };
+
+                            if (lineStyle === 'area') {
+                                const gradientId = `gradient-${variation.name.replace(/\s+/g, '-')}`;
+                                return (
+                                    <Area
+                                        {...commonProps}
+                                        type="monotone"
+                                        fill={`url(#${gradientId})`}
+                                        fillOpacity={1}
+                                    />
+                                );
+                            }
+
+                            return (
+                                <Line
+                                    {...commonProps}
+                                    type={lineStyle === 'smooth' ? 'monotone' : 'linear'}
+                                    dot={false}
+                                    strokeWidth={2}
+                                />
+                            );
+                        })}
+                    </ComposedChart>
                 </ResponsiveContainer>
             </div>
         </div>
