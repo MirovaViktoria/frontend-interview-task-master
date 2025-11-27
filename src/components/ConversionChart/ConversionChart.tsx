@@ -226,13 +226,27 @@ const ConversionChart: React.FC = () => {
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
+            // Format date to DD/MM/YYYY
+            const dateObj = new Date(label);
+            const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+
+            // Sort payload by value (rate) descending
+            const sortedPayload = [...payload].sort((a, b) => {
+                const rateA = a.payload[`${a.name}_details`]?.rate || 0;
+                const rateB = b.payload[`${b.name}_details`]?.rate || 0;
+                return rateB - rateA;
+            });
+
+            // Find max rate to determine winner (if needed, though sorting puts winner first)
+            const maxRate = sortedPayload.length > 0 ? sortedPayload[0].payload[`${sortedPayload[0].name}_details`]?.rate : 0;
+
             return (
                 <div className={styles.tooltip}>
                     <div className={styles.dateContainer}>
                         <img src="calendar.svg" alt="Calendar" />
-                        <p className={styles.tooltipDate}>{label}</p>
+                        <p className={styles.tooltipDate}>{formattedDate}</p>
                     </div>
-                    {payload.map((entry: any, index: number) => {
+                    {sortedPayload.map((entry: any, index: number) => {
                         const variationName = entry.name;
                         // Only show tooltip for visible variations
                         if (!visibleVariations.has(variationName)) return null;
@@ -240,12 +254,21 @@ const ConversionChart: React.FC = () => {
                         const details = entry.payload[`${variationName}_details`];
                         if (!details) return null;
 
+                        const isWinner = details.rate === maxRate && maxRate > 0;
+
                         return (
                             <div key={index} className={styles.tooltipItem}>
                                 <div className={styles.tooltipRow}>
-                                    <span className={styles.tooltipBullet} style={{ backgroundColor: entry.color }}></span>
-                                    <span className={styles.tooltipLabel}>{variationName}</span>
-                                    <span className={styles.tooltipValue}>{details.rate}%</span>
+                                    <div className={styles.tooltipLeft}>
+                                        <span className={styles.tooltipBullet} style={{ backgroundColor: entry.color }}></span>
+                                        <span className={styles.tooltipLabel}>{variationName}</span>
+                                        {isWinner && (
+                                            <span className={styles.trophyIcon} title="Winner">
+                                                <img src="generalbest.svg" alt="Winner" width="12" height="12" />
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className={styles.tooltipValue}>{details.rate.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
                                 </div>
                             </div>
                         );

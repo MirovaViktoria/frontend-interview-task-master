@@ -49,18 +49,19 @@
 .tooltip {
   background-color: var(--tooltip-bg);
   border: 1px solid var(--tooltip-border);
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   font-size: 13px;
-  min-width: 180px;
+  min-width: 220px;
 }
 
 .dateContainer {
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 12px
+  padding-bottom: 12px;
+  margin-bottom: 12px;
 }
 
 .dateContainer img {
@@ -72,28 +73,40 @@
   color: var(--tooltip-text);
   margin: 0;
   padding: 0;
-  font-size: 12px;
+  font-size: 14px;
   text-align: left;
 }
 
 .tooltipItem {
+  border: 1px dashed var(--border-color);
+  padding: 8px 4px;
+}
+
+.tooltipItem:not(:last-child) {
   margin-bottom: 6px;
 }
 
 .tooltipItem:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .tooltipRow {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.tooltipLeft {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 4px 0;
 }
 
 .tooltipBullet {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -101,14 +114,20 @@
 .tooltipLabel {
   font-weight: 500;
   color: var(--label-color);
-  flex: 1;
-  font-size: 12px;
+  font-size: 13px;
+}
+
+.trophyIcon {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
 }
 
 .tooltipValue {
   font-weight: 700;
   color: var(--tooltip-text);
   font-size: 14px;
+  margin-left: 12px;
 }
 
 /* Controls Styles */
