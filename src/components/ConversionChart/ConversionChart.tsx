@@ -13,6 +13,7 @@ import {
 import type { Data } from '../../types';
 import rawData from '../../data.json';
 import styles from './ConversionChart.module.css';
+import { curveCardinal } from 'd3-shape';
 
 const data = rawData as Data;
 
@@ -23,7 +24,7 @@ const ConversionChart: React.FC = () => {
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
     const [zoomLevel, setZoomLevel] = useState<number>(100);
     const [isVariationDropdownOpen, setIsVariationDropdownOpen] = useState(false);
-    const [lineStyle, setLineStyle] = useState<'line' | 'smooth' | 'area'>('line');
+    const [lineStyle, setLineStyle] = useState<'curve' | 'area' | 'shadow' | 'straight'>('curve');
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const variationDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -385,11 +386,12 @@ const ConversionChart: React.FC = () => {
                     <select
                         className={styles.select}
                         value={lineStyle}
-                        onChange={(e) => setLineStyle(e.target.value as 'line' | 'smooth' | 'area')}
+                        onChange={(e) => setLineStyle(e.target.value as 'curve' | 'area' | 'shadow' | 'straight')}
                     >
-                        <option value="line">Line</option>
-                        <option value="smooth">Smooth</option>
+                        <option value="curve">Curve</option>
                         <option value="area">Area</option>
+                        <option value="shadow">Shadow</option>
+                        <option value="straight">Straight</option>
                     </select>
                     <button className={styles.zoomButton} onClick={handleZoomOut} title="Zoom out">−</button>
                     <button className={styles.zoomButton} onClick={handleZoomIn} title="Zoom in">+</button>
@@ -456,12 +458,27 @@ const ConversionChart: React.FC = () => {
                             }
 
                             return (
-                                <Line
-                                    {...commonProps}
-                                    type={lineStyle === 'smooth' ? 'monotone' : 'linear'}
-                                    dot={false}
-                                    strokeWidth={2}
-                                />
+                                <React.Fragment key={variation.name}>
+                                    {lineStyle === 'shadow' && (
+                                        <Line
+                                            {...commonProps}
+                                            key={`${variation.name}-shadow`}
+                                            type="monotone"
+                                            strokeWidth={10}
+                                            strokeOpacity={0.2}
+                                            dot={false}
+                                            activeDot={false}
+                                            legendType="none"
+                                            tooltipType="none"
+                                        />
+                                    )}
+                                    <Line
+                                        {...commonProps}
+                                        type={lineStyle === 'curve' ? curveCardinal : lineStyle === 'straight' ? 'linear' : 'monotone'}
+                                        dot={false}
+                                        strokeWidth={2}
+                                    />
+                                </React.Fragment>
                             );
                         })}
                     </ComposedChart>
