@@ -425,7 +425,7 @@ const ConversionChart: React.FC = () => {
                             stroke={theme === 'dark' ? '#1a1f3a' : '#f0f0f0'}
                         />
                         <XAxis
-                            tick={{ dy: 10 }}
+                            tick={{ dy: 8 }}
                             dataKey="date"
                             stroke={theme === 'dark' ? '#a0a0a0' : '#666'}
                         />
