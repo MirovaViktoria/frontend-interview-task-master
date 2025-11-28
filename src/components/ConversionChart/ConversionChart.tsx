@@ -13,7 +13,6 @@ import {
 import type { Data } from '../../types';
 import rawData from '../../data.json';
 import styles from './ConversionChart.module.css';
-import { curveCardinal } from 'd3-shape';
 
 const data = rawData as Data;
 
@@ -426,6 +425,7 @@ const ConversionChart: React.FC = () => {
                             stroke={theme === 'dark' ? '#1a1f3a' : '#f0f0f0'}
                         />
                         <XAxis
+                            tick={{ dy: 10 }}
                             dataKey="date"
                             stroke={theme === 'dark' ? '#a0a0a0' : '#666'}
                         />
@@ -474,7 +474,7 @@ const ConversionChart: React.FC = () => {
                                     )}
                                     <Line
                                         {...commonProps}
-                                        type={lineStyle === 'curve' ? curveCardinal : lineStyle === 'straight' ? 'linear' : 'monotone'}
+                                        type={lineStyle === 'curve' ? 'monotone' : lineStyle === 'straight' ? 'linear' : 'monotone'}
                                         dot={false}
                                         strokeWidth={2}
                                     />
