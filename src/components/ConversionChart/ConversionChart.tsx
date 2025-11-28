@@ -224,21 +224,76 @@ const ConversionChart: React.FC = () => {
         return `${selectedNames.length} variations selected`;
     };
 
+    const getInterpolatedValue = (data: any[], index: number, key: string) => {
+        // Search backwards
+        let prevIndex = -1;
+        for (let i = index - 1; i >= 0; i--) {
+            if (data[i][key] !== null && data[i][key] !== undefined) {
+                prevIndex = i;
+                break;
+            }
+        }
+        // Search forwards
+        let nextIndex = -1;
+        for (let i = index + 1; i < data.length; i++) {
+            if (data[i][key] !== null && data[i][key] !== undefined) {
+                nextIndex = i;
+                break;
+            }
+        }
+
+        if (prevIndex !== -1 && nextIndex !== -1) {
+            const prevValue = data[prevIndex][key];
+            const nextValue = data[nextIndex][key];
+            const progress = (index - prevIndex) / (nextIndex - prevIndex);
+            return prevValue + (nextValue - prevValue) * progress;
+        }
+        return null;
+    };
+
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             // Format date to DD/MM/YYYY
             const dateObj = new Date(label);
             const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
 
-            // Sort payload by value (rate) descending
-            const sortedPayload = [...payload].sort((a, b) => {
-                const rateA = a.payload[`${a.name}_details`]?.rate || 0;
-                const rateB = b.payload[`${b.name}_details`]?.rate || 0;
-                return rateB - rateA;
+            const currentIndex = chartData.findIndex(item => item.date === label);
+            const tooltipItems: any[] = [];
+
+            visibleVariations.forEach((variationName) => {
+                const variationIndex = data.variations.findIndex(v => v.name === variationName);
+                const color = colors[variationIndex % colors.length];
+                let rate: number | null = null;
+
+                // Try to find in payload first
+                const payloadItem = payload.find((p: any) => p.name === variationName);
+                if (payloadItem && payloadItem.payload[`${variationName}_details`]) {
+                    rate = payloadItem.payload[`${variationName}_details`].rate;
+                } else if (currentIndex !== -1) {
+                    // Check if value exists in data but was dropped by Recharts (unlikely but possible)
+                    const val = chartData[currentIndex][variationName];
+                    if (val !== null && val !== undefined) {
+                        rate = val;
+                    } else {
+                        // Interpolate
+                        rate = getInterpolatedValue(chartData, currentIndex, variationName);
+                    }
+                }
+
+                if (rate !== null) {
+                    tooltipItems.push({
+                        name: variationName,
+                        color,
+                        rate
+                    });
+                }
             });
 
-            // Find max rate to determine winner (if needed, though sorting puts winner first)
-            const maxRate = sortedPayload.length > 0 ? sortedPayload[0].payload[`${sortedPayload[0].name}_details`]?.rate : 0;
+            // Sort tooltip items by value (rate) descending
+            tooltipItems.sort((a, b) => b.rate - a.rate);
+
+            // Find max rate to determine winner
+            const maxRate = tooltipItems.length > 0 ? tooltipItems[0].rate : 0;
 
             return (
                 <div className={styles.tooltip}>
@@ -246,29 +301,22 @@ const ConversionChart: React.FC = () => {
                         <img src="calendar.svg" alt="Calendar" />
                         <p className={styles.tooltipDate}>{formattedDate}</p>
                     </div>
-                    {sortedPayload.map((entry: any, index: number) => {
-                        const variationName = entry.name;
-                        // Only show tooltip for visible variations
-                        if (!visibleVariations.has(variationName)) return null;
-
-                        const details = entry.payload[`${variationName}_details`];
-                        if (!details) return null;
-
-                        const isWinner = details.rate === maxRate && maxRate > 0;
+                    {tooltipItems.map((entry: any, index: number) => {
+                        const isWinner = entry.rate === maxRate && maxRate > 0;
 
                         return (
                             <div key={index} className={styles.tooltipItem}>
                                 <div className={styles.tooltipRow}>
                                     <div className={styles.tooltipLeft}>
                                         <span className={styles.tooltipBullet} style={{ backgroundColor: entry.color }}></span>
-                                        <span className={styles.tooltipLabel}>{variationName}</span>
+                                        <span className={styles.tooltipLabel}>{entry.name}</span>
                                         {isWinner && (
                                             <span className={styles.trophyIcon} title="Winner">
                                                 <img src="generalbest.svg" alt="Winner" width="12" height="12" />
                                             </span>
                                         )}
                                     </div>
-                                    <span className={styles.tooltipValue}>{details.rate.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
+                                    <span className={styles.tooltipValue}>{entry.rate.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
                                 </div>
                             </div>
                         );
