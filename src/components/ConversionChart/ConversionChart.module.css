@@ -14,11 +14,12 @@
   background-color: var(--bg-color);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin: 20px;
+  margin: 20px auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   color: var(--text-color);
   transition: background-color 0.3s, color 0.3s;
   width: calc(80vw - 40px);
+  max-width: 1400px;
   box-sizing: border-box;
 }
 
@@ -338,7 +339,7 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 670px) {
   .controlsContainer {
     flex-direction: column;
     align-items: flex-start;
@@ -363,7 +364,6 @@
 
 @media (min-width: 671px) and (max-width: 1300px) {
   .container {
-    width: 95%;
     margin: 20px auto;
     padding: 20px;
   }
@@ -375,11 +375,13 @@
   .leftControls {
     flex: 1;
     min-width: 300px;
-    /* Ensure it doesn't wrap too early */
   }
 
   .zoomControls {
-    margin-top: 10px;
-    /* Add some space if it wraps */
+    margin-top: 0;
+  }
+
+  .chartWrapper {
+    height: 380px;
   }
 }
